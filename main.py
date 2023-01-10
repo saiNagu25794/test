@@ -16,7 +16,9 @@ def employee(employee_id: int, employee_name: str, employee_salary=None):
 @app.post("/employee/data")
 def employee_create(data: Any = Body(...)):
     return data
-
+@app.put("/employee/data/edit")
+def employee_create(data: Any = Body(...)):
+    return data
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8080)
