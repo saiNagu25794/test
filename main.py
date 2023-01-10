@@ -11,15 +11,10 @@ def read_root():
 
 @app.get("/employee")
 def employee(employee_id: int, employee_name: str, employee_salary=None):
-    #
     return {"employee_id": employee_id, "employee_name": employee_name, "employee_salary": employee_salary}
 
 @app.post("/employee/data")
 def employee_create(data: Any = Body(...)):
-    # response = {
-    #     "status": 404,
-    #     "message": "employee not found"
-    # }
     return data
 
 
