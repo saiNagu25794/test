@@ -19,7 +19,8 @@ def getCategory(category_id : int):
 
 @app.post("/category")
 def createCategory(category : Any = Body(...)):
-    new_id = len(Categories) + 1
+    previous_id = Categories[-1]["category_id"]
+    new_id = previous_id + 1
     result = {
         "category_id" : new_id,
         "category_name" : category["category_name"]
