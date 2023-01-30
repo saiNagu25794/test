@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, HTTPException
 import uvicorn
-from typing import Any
+
 
 
 app = FastAPI()
@@ -225,6 +225,10 @@ def getItems(category_id : int, limit : int = 10, page : int = 1 ):
     val = [(category_id)]
     mycursor.execute(sql, val)
     result = mycursor.fetchall()
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"The category id {category_id} is not found"
+        )
     result_list = []
     for item in result:
         result_list.append({
@@ -232,7 +236,12 @@ def getItems(category_id : int, limit : int = 10, page : int = 1 ):
             "item_name" : item[1],
             "price" : item[2]
         })
-    return result_list[start : end]
+    list_a = result_list[start : end]
+    if not list_a:
+        raise HTTPException(
+            status_code=404, detail=f"The page {page} does not exist"
+        )
+    return list_a
 
 @app.get("/category/{category_id}/item/{item_id}")
 def getItems(category_id : int, item_id : int):
