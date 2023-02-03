@@ -1,8 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import uvicorn
 
-
-
 app = FastAPI()
 
 import mysql.connector
@@ -23,23 +21,24 @@ class Items(BaseModel):
 
 @app.get("/category")
 def getCategory(limit : int = 10, page : int = 1):
-    start  = (page - 1 ) * limit
-    end = start + limit
-    sql = "SELECT * FROM category"
-    mycursor.execute(sql)
+    offset  = (page - 1 ) * limit
+
+    sql = "SELECT * FROM category LIMIT %s OFFSET %s"
+    val = [(limit), (offset)]
+    mycursor.execute(sql, val)
     result = mycursor.fetchall()
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"The page {page} does not exist"
+        )
     result_list = []
     for item in result:
         result_list.append({
             "category_id" : item[0],
             "category_name" : item[1]
         })
-    getResult = result_list[start : end]
-    if not getResult:
-        raise HTTPException(
-            status_code=404, detail= f"The page {page} does not exist"
-        )
-    return getResult
+
+    return result_list
 
 
 
@@ -126,11 +125,15 @@ def deleteCategory(category_id : int):
 
 @app.get("/item")
 def getCategory(limit : int = 10, page : int = 1):
-    start  = (page - 1 ) * limit
-    end = start + limit
-    sql = "SELECT * FROM item"
-    mycursor.execute(sql)
+    offset  = (page - 1 ) * limit
+    sql = "SELECT * FROM item LIMIT %s OFFSET %s"
+    val = [(limit), (offset)]
+    mycursor.execute(sql, val)
     result = mycursor.fetchall()
+    if not result:
+        raise HTTPException(
+            status_code=404, detail= f"The page {page} does not exist"
+        )
     result_list = []
     for item in result:
         result_list.append({
@@ -138,12 +141,8 @@ def getCategory(limit : int = 10, page : int = 1):
             "item_name" : item[1],
             "price" : item[2]
         })
-    getResult = result_list[start : end]
-    if not getResult:
-        raise HTTPException(
-            status_code=404, detail= f"The page {page} does not exist"
-        )
-    return getResult
+
+    return result_list
 
 
 @app.get("/item/{item_id}")
@@ -219,15 +218,14 @@ def deleteCategory(item_id : int):
 
 @app.get("/category/{category_id}/item")
 def getItems(category_id : int, limit : int = 10, page : int = 1 ):
-    start = (page - 1) * limit
-    end = start + limit
-    sql = "SELECT item_id, item_name, price FROM item WHERE category_id = %s"
-    val = [(category_id)]
+    offset = (page - 1) * limit
+    sql = "SELECT item_id, item_name, price FROM item WHERE category_id = %s LIMIT %s OFFSET %s"
+    val = [(category_id), (limit), (offset)]
     mycursor.execute(sql, val)
     result = mycursor.fetchall()
     if not result:
         raise HTTPException(
-            status_code=404, detail=f"The category id {category_id} is not found"
+            status_code=404, detail=f"Items not found"
         )
     result_list = []
     for item in result:
@@ -236,12 +234,7 @@ def getItems(category_id : int, limit : int = 10, page : int = 1 ):
             "item_name" : item[1],
             "price" : item[2]
         })
-    list_a = result_list[start : end]
-    if not list_a:
-        raise HTTPException(
-            status_code=404, detail=f"The page {page} does not exist"
-        )
-    return list_a
+    return result_list
 
 @app.get("/category/{category_id}/item/{item_id}")
 def getItems(category_id : int, item_id : int):
@@ -259,11 +252,12 @@ def getItems(category_id : int, item_id : int):
     }
 @app.get("/getAllCategories")
 def getAllCategories(limit : int = 10, page : int = 1):
-    start = (page - 1) * limit
-    end = start + limit
+    offset = (page - 1) * limit
 
-    sql = "SELECT * FROM category INNER JOIN item WHERE category.category_id = item.category_id"
-    mycursor.execute(sql)
+
+    sql = "SELECT * FROM category INNER JOIN item WHERE category.category_id = item.category_id LIMIT %s OFFSET %s"
+    val = [(limit), (offset)]
+    mycursor.execute(sql, val)
     result_list = mycursor.fetchall()
     category_id = []
     list_a = []
@@ -287,23 +281,11 @@ def getAllCategories(limit : int = 10, page : int = 1):
                 }]
             })
             category_id.append(item[0])
-    result_list = list_a[start : end]
-    if not result_list:
+    if not list_a:
         raise HTTPException(
             status_code=404, detail= f"The page {page} does not exist"
         )
     return result_list
-
-
-
-
-
-
-
-
-
-
-
 
 
 
